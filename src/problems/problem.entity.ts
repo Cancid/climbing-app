@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/auth/user.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ProblemAttempts } from './problem-attempts.enum';
 
 @Entity()
@@ -14,4 +15,7 @@ export class Problem {
 
   @Column()
   attempts: ProblemAttempts;
+
+  @ManyToOne((_type) => User, (user) => user.problems, { eager: false })
+  user: User;
 }

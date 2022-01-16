@@ -6,6 +6,8 @@ import { Problem } from './problem.entity';
 
 @EntityRepository(Problem)
 export class ProblemsRepository extends Repository<Problem> {
+  // eslint-disable-next-line prettier/prettier
+  
   async getProblems(filterDto: GetProblemFiltersDto): Promise<Problem[]> {
     const { grade, attempts, search } = filterDto;
     const query = this.createQueryBuilder('problem');
