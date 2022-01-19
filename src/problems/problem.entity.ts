@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { User } from 'src/auth/user.entity';
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ProblemAttempts } from './problem-attempts.enum';
@@ -16,6 +17,16 @@ export class Problem {
   @Column()
   attempts: ProblemAttempts;
 
+  @Column({ nullable: true, type: 'date' })
+  date: string;
+
+  @Column({ nullable: true })
+  rating: number;
+
+  @Column({ nullable: true })
+  description: string;
+
   @ManyToOne((_type) => User, (user) => user.problems, { eager: false })
+  @Exclude()
   user: User;
 }

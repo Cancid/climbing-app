@@ -1,4 +1,4 @@
-import { IsNotEmpty } from 'class-validator';
+import { IsDate, IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { ProblemAttempts } from '../problem-attempts.enum';
 
 export class CreateProblemDto {
@@ -10,7 +10,10 @@ export class CreateProblemDto {
 
   @IsNotEmpty()
   attempts: ProblemAttempts;
-  //   date: Date;
-  //   rating: number;
-  //   description: string;
+
+  date: string;
+
+  rating: number;
+
+  description: string;
 }
