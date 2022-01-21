@@ -7,6 +7,8 @@ import { JwtPayload } from './jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
+import { access } from 'fs';
+import { RefreshTokenStrategy } from './refresh-token.strategy';
 
 @Injectable()
 export class AuthService {
@@ -23,16 +25,15 @@ export class AuthService {
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ refreshToken: string }> {
     const { username, email, password } = authCredentialsDto;
     const user =
       (await this.usersRepository.findOne({ username })) ||
       (await this.usersRepository.findOne({ email }));
 
     if (user && (await bcrypt.compare(password, user.password))) {
-      const payload: JwtPayload = { username };
-      const accessToken = await this.jwtService.sign(payload);
-      return { accessToken };
+      const refreshToken = await this.getRefreshToken(username);
+      return refreshToken;
     } else {
       throw new UnauthorizedException(
         'Please check your username and password.',
@@ -40,17 +41,19 @@ export class AuthService {
     }
   }
 
-  async getRefreshTokenCookie(authCredentialsDto: AuthCredentialsDto) {
-    const { username } = authCredentialsDto;
+  async getAccessToken(username: string): Promise<{ accessToken: string }> {
+    const payload: JwtPayload = { username };
+    const accessToken = await this.jwtService.sign(payload);
+    return { accessToken };
+  }
+
+  async getRefreshToken(username: string): Promise<{ refreshToken: string }> {
     const payload: JwtPayload = { username };
     const refreshToken = await this.jwtService.sign(payload, {
       secret: this.configService.get('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
     });
-    const cookie = `Refresh=${refreshToken}; HttpOnly; Path=/; Max-Age=${this.configService.get(
-      'REFRESH_TOKEN_EXPIRATION',
-    )}s`;
-    return { cookie, refreshToken };
+    return { refreshToken };
   }
 
   async setRefreshToken(refreshToken: string, user: User): Promise<void> {
