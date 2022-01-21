@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Problem } from 'src/problems/problem.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
@@ -14,6 +15,10 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  currentHashedRefreshToken?: string;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   @OneToMany((_type) => Problem, (problem) => problem.user, { eager: true })

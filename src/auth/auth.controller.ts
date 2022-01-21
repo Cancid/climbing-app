@@ -1,6 +1,8 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { AuthService } from './auth.service';
+import { request } from 'http';
+import { User } from './user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -13,6 +15,12 @@ export class AuthController {
 
   @Get('/signin')
   async signIn(@Body() authCredentialsDto: AuthCredentialsDto) {
-    return this.authService.signIn(authCredentialsDto);
+    const accessToken = this.authService.signIn(authCredentialsDto);
+    const refreshToken = this.authService.getRefreshTokenCookie(authCredentialsDto);
+    
+  
   }
+
+  // @Post('/singout')
+  // async signout(@Body() authCredentialsDto: AuthCredentialsDto)
 }

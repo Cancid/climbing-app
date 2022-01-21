@@ -5,6 +5,8 @@ import { UsersRepository } from './users.repository';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from './jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { User } from './user.entity';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +14,7 @@ export class AuthService {
     @InjectRepository(UsersRepository)
     private usersRepository: UsersRepository,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async signUp(authCredentialsDto: AuthCredentialsDto) {
@@ -34,6 +37,36 @@ export class AuthService {
       throw new UnauthorizedException(
         'Please check your username and password.',
       );
+    }
+  }
+
+  async getRefreshTokenCookie(authCredentialsDto: AuthCredentialsDto) {
+    const { username } = authCredentialsDto;
+    const payload: JwtPayload = { username };
+    const refreshToken = await this.jwtService.sign(payload, {
+      secret: this.configService.get('REFRESH_TOKEN_SECRET'),
+      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
+    });
+    const cookie = `Refresh=${refreshToken}; HttpOnly; Path=/; Max-Age=${this.configService.get(
+      'REFRESH_TOKEN_EXPIRATION',
+    )}s`;
+    return { cookie, refreshToken };
+  }
+
+  async setRefreshToken(refreshToken: string, user: User): Promise<void> {
+    const salt = bcrypt.genSalt();
+    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+    await this.usersRepository.update(user.id, { currentHashedRefreshToken });
+  }
+
+  async getUserByRefreshToken(refreshToken: string, user: User): Promise<User> {
+    const isRefreshTokenMatching = await bcrypt.compare(
+      refreshToken,
+      user.currentHashedRefreshToken,
+    );
+
+    if (isRefreshTokenMatching) {
+      return user;
     }
   }
 }
