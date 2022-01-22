@@ -7,8 +7,7 @@ import { JwtPayload } from './jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from './user.entity';
-import { access } from 'fs';
-import { RefreshTokenStrategy } from './refresh-token.strategy';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +24,8 @@ export class AuthService {
 
   async signIn(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<{ refreshToken: string }> {
+    response: Response,
+  ): Promise<void> {
     const { username, email, password } = authCredentialsDto;
     const user =
       (await this.usersRepository.findOne({ username })) ||
@@ -33,7 +33,10 @@ export class AuthService {
 
     if (user && (await bcrypt.compare(password, user.password))) {
       const refreshToken = await this.getRefreshToken(username);
-      return refreshToken;
+      await this.setRefreshToken(refreshToken.refreshToken, user);
+      const accessToken = await this.getAccessToken(username);
+      response.setHeader('Set-Cookie', [refreshToken.cookie]);
+      response.json(accessToken);
     } else {
       throw new UnauthorizedException(
         'Please check your username and password.',
@@ -47,22 +50,32 @@ export class AuthService {
     return { accessToken };
   }
 
-  async getRefreshToken(username: string): Promise<{ refreshToken: string }> {
+  async getRefreshToken(
+    username: string,
+  ): Promise<{ cookie: string; refreshToken: string }> {
     const payload: JwtPayload = { username };
     const refreshToken = await this.jwtService.sign(payload, {
       secret: this.configService.get('REFRESH_TOKEN_SECRET'),
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
     });
-    return { refreshToken };
+    const cookie = `Refresh = ${refreshToken}; HttpOnly; Path=/; Max-Age=${this.configService.get(
+      'REFRESH_TOKEN_EXPIRATION',
+    )}`;
+    return { cookie, refreshToken };
   }
 
   async setRefreshToken(refreshToken: string, user: User): Promise<void> {
-    const salt = bcrypt.genSalt();
-    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, salt);
+    console.log(refreshToken);
+    const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
     await this.usersRepository.update(user.id, { currentHashedRefreshToken });
+    return;
   }
 
-  async getUserByRefreshToken(refreshToken: string, user: User): Promise<User> {
+  async getUserByRefreshToken(
+    refreshToken: string,
+    username: string,
+  ): Promise<User> {
+    const user = await this.usersRepository.findOne({ username });
     const isRefreshTokenMatching = await bcrypt.compare(
       refreshToken,
       user.currentHashedRefreshToken,
