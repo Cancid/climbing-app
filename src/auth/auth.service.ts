@@ -36,6 +36,7 @@ export class AuthService {
       await this.setRefreshToken(refreshToken.refreshToken, user);
       const accessToken = await this.getAccessToken(username);
       response.setHeader('Set-Cookie', [refreshToken.cookie]);
+      response.setHeader('User', [user.username]);
       response.json(accessToken);
     } else {
       throw new UnauthorizedException(
@@ -74,7 +75,7 @@ export class AuthService {
   async getUserByRefreshToken(
     refreshToken: string,
     username: string,
-  ): Promise<User> {
+  ): Promise<boolean> {
     const user = await this.usersRepository.findOne({ username });
     const isRefreshTokenMatching = await bcrypt.compare(
       refreshToken,
@@ -82,6 +83,14 @@ export class AuthService {
     );
 
     if (isRefreshTokenMatching) {
+      return true;
+    }
+  }
+
+  async validateUser(username: string, password: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ username });
+
+    if (user && (await bcrypt.compare(password, user.password))) {
       return user;
     }
   }

@@ -15,10 +15,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       secretOrKey: 'secret',
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      verify: 
     });
   }
 
   async validate(payload: JwtPayload): Promise<User> {
+    console.log('Payload:');
+    console.log(payload);
     const { username } = payload;
     const user: User = await this.usersRepository.findOne({ username });
 

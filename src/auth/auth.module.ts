@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { configValidationSchema } from 'src/config.schema';
+import { configValidationSchema } from '../config.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
+import { LocalStrategy } from './local.strategy';
 import { UsersRepository } from './users.repository';
 
 @Module({
@@ -19,13 +20,13 @@ import { UsersRepository } from './users.repository';
     JwtModule.register({
       secret: 'secret',
       signOptions: {
-        expiresIn: 3600,
+        expiresIn: 5,
       },
     }),
     TypeOrmModule.forFeature([UsersRepository]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, LocalStrategy],
   exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}
