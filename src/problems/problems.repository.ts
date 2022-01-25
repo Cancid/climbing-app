@@ -1,4 +1,4 @@
-import { User } from 'src/auth/user.entity';
+import { User } from '../auth/user.entity';
 import { EntityRepository, Repository } from 'typeorm';
 import { CreateProblemDto } from './dto/create-problem.dto';
 import { GetProblemFiltersDto } from './dto/get-problem-filter.dto';

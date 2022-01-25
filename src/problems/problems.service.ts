@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateProblemDto } from './dto/create-problem.dto';
-import { ProblemAttempts } from './problem-attempts.enum';
 import { GetProblemFiltersDto } from './dto/get-problem-filter.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ProblemsRepository } from './problems.repository';
 import { Problem } from './problem.entity';
-import { User } from 'src/auth/user.entity';
+import { User } from '../auth/user.entity';
 import { UpdateProblemDto } from './dto/update-problem.dto';
 
 @Injectable()
