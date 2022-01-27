@@ -1,0 +1,28 @@
+<mat-card>
+  <form (submit)="onAddProblem(problemForm)" #problemForm="ngForm">
+  <mat-form-field>
+    <input matInput
+    type="text"
+    name="title"
+    ngModel
+    #title=ngModel
+    required
+    placeholder="Problem Title">
+    <mat-error *ngIf="title.invalid">Please eneter a problem title.</mat-error>
+  </mat-form-field>
+  <mat-form-field>
+    <textarea
+    matInput
+    name="description"
+    ngModel
+    required
+    placeholder="Problem Description"
+    #description=ngModel></textarea>
+    <mat-error *ngIf="description.invalid">Please eeter a problem description.</mat-error>
+  </mat-form-field>
+  <button
+  mat-raised-button
+  color="accent"
+  type="submit">Add Problem</button>
+  </form>
+</mat-card>
